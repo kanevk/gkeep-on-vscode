@@ -18,6 +18,10 @@
       {
         "command": "gkeep.createNote",
         "title": "GKeep: Create Note"
+      },
+      {
+        "command": "gkeep.searchNotes",
+        "title": "GKeep: Search Note"
       }
     ]
   },

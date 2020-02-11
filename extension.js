@@ -34,8 +34,6 @@ function activate(context) {
         return;
       }
 
-      vscode.window.showInformationMessage(`I will create note - ${title}`);
-
       let newFilePath = `${CONFIG.notes_root}/${title}.${CONFIG.notes_format}`;
 
       fs.open(newFilePath, "w", async error => {
@@ -55,7 +53,36 @@ function activate(context) {
     }
   );
 
+  let searchNote = vscode.commands.registerCommand(
+    "gkeep.searchNotes",
+    async () => {
+      const fileTuples = await vscode.workspace.fs.readDirectory(
+        vscode.Uri.file(CONFIG.notes_root)
+      );
+
+      const noteFiles = fileTuples
+        .filter(([_, type]) => type === vscode.FileType.File)
+        .map(([name, _]) => name)
+        .filter(name => name.endsWith(CONFIG.notes_format));
+
+      const selectedFileName = await vscode.window.showQuickPick(noteFiles, {
+        placeHolder: "Enter note title...",
+        canPickMany: false
+      });
+
+      if (!selectedFileName) {
+        return;
+      }
+
+      const doc = await vscode.workspace.openTextDocument(
+        vscode.Uri.file(`${CONFIG.notes_root}/${selectedFileName}`)
+      );
+      vscode.window.showTextDocument(doc);
+    }
+  );
+
   context.subscriptions.push(createNoteCommand);
+  context.subscriptions.push(searchNote);
 }
 exports.activate = activate;
 
