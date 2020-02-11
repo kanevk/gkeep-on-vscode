@@ -3,6 +3,7 @@
   "displayName": "gkeep",
   "description": "Google Keep integration within your editor",
   "version": "0.0.1",
+  "publisher": "kanevk",
   "engines": {
     "vscode": "^1.41.0"
   },
@@ -23,7 +24,34 @@
         "command": "gkeep.searchNotes",
         "title": "GKeep: Search Note"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "GKeep",
+      "gkeep.email": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "default": null,
+        "description": "Your Google login email"
+      },
+      "gkeep.appPassword": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "default": null,
+        "description": "Your Google [App password](https://support.google.com/accounts/answer/185833?hl=en)"
+      },
+      "gkeep.notesRootDirectory": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "default": null,
+        "description": "Local directory path in which the notes will be stored"
+      }
+    }
   },
   "scripts": {
     "lint": "eslint .",

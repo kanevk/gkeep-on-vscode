@@ -1,24 +1,29 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 const vscode = require("vscode");
 const fs = require("fs");
+const {
+  window: { showErrorMessage }
+} = vscode;
 
-// TODO: Use user-specific config(https://github.com/kanevk/gkeep-on-vscode/projects/1#card-32891433)
-const CONFIG = {
-  notes_root: "/Users/kkanev/vsnotes",
-  notes_format: "md"
-};
-
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
+const NOTES_FORMAT = "md";
 
 /**
  * @param {vscode.ExtensionContext} context
  */
 function activate(context) {
-  console.log(
-    'Congratulations, your extension "gkeep-on-vscode" is now active!'
-  );
+  const CONFIG = vscode.workspace.getConfiguration("gkeep");
+  const defaultNotesRootDirectory = `${context.globalStoragePath}/notes`;
+  const notesRootDirectory =
+    CONFIG.notesRootDirectory || defaultNotesRootDirectory;
+
+  // Create the defaultNotesRootDirectory only once
+  fs.exists(context.globalStoragePath, exists => {
+    if (exists) {
+      return;
+    }
+
+    fs.mkdirSync(context.globalStoragePath);
+    fs.mkdirSync(defaultNotesRootDirectory);
+  });
 
   let createNoteCommand = vscode.commands.registerCommand(
     "gkeep.createNote",
@@ -30,17 +35,15 @@ function activate(context) {
       const title = rawTitle.trim();
 
       if (title === "") {
-        vscode.window.showErrorMessage("The note title cannot be empty");
+        showErrorMessage("The note title cannot be empty");
         return;
       }
 
-      let newFilePath = `${CONFIG.notes_root}/${title}.${CONFIG.notes_format}`;
+      let newFilePath = `${notesRootDirectory}/${title}.${NOTES_FORMAT}`;
 
       fs.open(newFilePath, "w", async error => {
         if (error) {
-          vscode.window.showErrorMessage(
-            `The file "${title}" couldn't be created: ${error}`
-          );
+          showErrorMessage(`The file "${title}" couldn't be created: ${error}`);
           return;
         }
 
@@ -57,13 +60,13 @@ function activate(context) {
     "gkeep.searchNotes",
     async () => {
       const fileTuples = await vscode.workspace.fs.readDirectory(
-        vscode.Uri.file(CONFIG.notes_root)
+        vscode.Uri.file(notesRootDirectory)
       );
 
       const noteFiles = fileTuples
         .filter(([_, type]) => type === vscode.FileType.File)
         .map(([name, _]) => name)
-        .filter(name => name.endsWith(CONFIG.notes_format));
+        .filter(name => name.endsWith(NOTES_FORMAT));
 
       const selectedFileName = await vscode.window.showQuickPick(noteFiles, {
         placeHolder: "Enter note title...",
@@ -75,7 +78,7 @@ function activate(context) {
       }
 
       const doc = await vscode.workspace.openTextDocument(
-        vscode.Uri.file(`${CONFIG.notes_root}/${selectedFileName}`)
+        vscode.Uri.file(`${notesRootDirectory}/${selectedFileName}`)
       );
       vscode.window.showTextDocument(doc);
     }
